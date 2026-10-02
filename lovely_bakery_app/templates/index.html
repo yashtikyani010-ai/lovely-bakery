@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lovely Bakery - Order & Track</title>
+    <!-- Auto reload customer page every 60 seconds (1 minute) -->
+    <meta http-equiv="refresh" content="60">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c1d11 0%, #3d2817 50%, #1a110a 100%);
+            margin: 0;
+            padding: 0;
+            color: #f4e8d8;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(90deg, #4a2e18, #b8860b);
+            color: #fff;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);
+            border-bottom: 2px solid #d4af37;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 30px auto;
+            background: rgba(44, 29, 17, 0.95);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            border: 2px solid #b8860b;
+            margin-bottom: 50px;
+        }
+
+        .catalog {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .cake-card {
+            border: 2px solid #8b5a2b;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            background: #352214;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .cake-card.selected {
+            border-color: #d4af37;
+            background: #4a321e;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .cake-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .cake-card img:hover {
+            transform: scale(1.03);
+        }
+
+        .zoom-hint {
+            font-size: 11px;
+            color: #d4af37;
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .select-btn {
+            background: #8b5a2b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .cake-card.selected .select-btn {
+            background: #d4af37;
+            color: #21140b;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #d4af37;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #8b5a2b;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            background: #21140b;
+            color: #fff;
+        }
+
+        button[type="submit"], .track-btn {
+            background: linear-gradient(90deg, #b8860b, #d4af37);
+            color: #21140b;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: filter 0.3s;
+        }
+
+        button[type="submit"]:hover, .track-btn:hover {
+            filter: brightness(1.15);
+        }
+
+        .track-box {
+            background: #21140b;
+            border: 1px dashed #d4af37;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .admin-link a {
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Modal Overlay for Full Image Zoom */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 75vh;
+            border-radius: 10px;
+            border: 3px solid #d4af37;
+            object-fit: contain;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+        }
+
+        .modal-caption {
+            color: #d4af37;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            background: #8b0000;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #d4af37;
+        }
+
+        .close-modal:hover {
+            background: #ff0000;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎂 Lovely Bakery</h1>
+        <p>Premium Cakes & Pastries Crafted with Elegance</p>
+    </header>
+
+    <div class="container">
+        <h2>Select Item for Review & Order</h2>
+        <p style="font-size: 13px; color: #bbb; text-align: center; margin-bottom: 20px;">Click on any photo to zoom in & view full size</p>
+        
+        <div class="catalog">
+            {% if menu %}
+                {% for item in menu %}
+                <div class="cake-card {% if loop.first %}selected{% endif %}" id="card-{{ loop.index0 }}">
+                    <!-- Click image to open zoom modal -->
+                    <img src="{{ item.image }}" alt="{{ item.name }}" onclick="openModal('{{ item.image }}', '{{ item.name }} - ₹{{ item.price }} ({{ item.weight }})')">
+                    <div class="zoom-hint" onclick="openModal('{{ item.image }}', '{{ item.name }} - ₹{{ item.price }} ({{ item.weight }})')">🔍 Click to Zoom</div>
+                    
+                    <h4 style="margin: 8px 0 4px 0;">{{ item.name }}</h4>
+                    <p style="margin: 0; color: #d4af37; font-size: 13px;">⚖ {{ item.weight }}</p>
+                    <p style="margin: 4px 0; font-weight: bold; font-size: 15px;">₹{{ item.price }}</p>
+                    
+                    <button type="button" class="select-btn" onclick="selectItem('{{ item.name }} ({{ item.weight }})', 'card-{{ loop.index0 }}')">
+                        {% if loop.first %}Selected ✓{% else %}Select Item{% endif %}
+                    </button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: #aaa; grid-column: span 2;">No items available in menu right now.</p>
+            {% endif %}
+        </div>
+
+        <form id="orderForm">
+            <input type="hidden" id="cake_item" name="cake_item" value="{% if menu %}{{ menu[0].name }} ({{ menu[0].weight }}){% endif %}">
+
+            <div class="form-group">
+                <label for="customer_name">Your Name:</label>
+                <input type="text" id="customer_name" name="customer_name" required placeholder="Enter your full name">
+            </div>
+            
+            <div class="form-group">
+                <label for="customer_phone">Phone Number:</label>
+                <input type="tel" id="customer_phone" name="customer_phone" required placeholder="10-digit mobile number">
+            </div>
+
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" min="1" max="10" value="1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="customer_location">Delivery Location / Address:</label>
+                <textarea id="customer_location" name="customer_location" rows="2" required placeholder="Enter delivery address or landmark"></textarea>
+            </div>
+
+            <button type="submit">Place Premium Order 🚀</button>
+        </form>
+
+        <p id="responseMsg" style="text-align: center; margin-top: 15px; font-weight: bold; color: #d4af37;"></p>
+
+        <!-- Track Order Section -->
+        <div class="track-box">
+            <h3>🔍 Track Your Order</h3>
+            <div class="form-group">
+                <label for="track_id">Enter Order ID:</label>
+                <input type="number" id="track_id" placeholder="e.g. 1, 2, 3">
+            </div>
+            <button type="button" class="track-btn" onclick="trackOrder()">Check Status</button>
+            <div id="trackResult" style="margin-top: 15px; font-size: 15px;"></div>
+        </div>
+
+        <div class="admin-link">
+            <a href="/admin-login">🔒 Businessman / Admin Portal Login</a>
+        </div>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImg">
+        <div class="modal-caption" id="modalCaption"></div>
+    </div>
+
+    <script>
+        function selectItem(itemName, cardId) {
+            document.querySelectorAll('.cake-card').forEach(card => {
+                card.classList.remove('selected');
+                card.querySelector('.select-btn').innerText = "Select Item";
+            });
+            let selectedCard = document.getElementById(cardId);
+            selectedCard.classList.add('selected');
+            selectedCard.querySelector('.select-btn').innerText = "Selected ✓";
+            document.getElementById('cake_item').value = itemName;
+        }
+
+        function openModal(imgSrc, captionText) {
+            let modal = document.getElementById('imageModal');
+            let modalImg = document.getElementById('modalImg');
+            let captionTextDiv = document.getElementById('modalCaption');
+            
+            modal.style.display = "flex";
+            modalImg.src = imgSrc;
+            captionTextDiv.innerText = captionText;
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+
+            fetch('/place_order', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Your Order ID is: <b style="color: #fff; font-size: 18px;">#${data.order_id}</b>`;
+                document.getElementById('orderForm').reset();
+                document.getElementById('quantity').value = "1";
+            });
+        });
+
+        function trackOrder() {
+            let orderId = document.getElementById('track_id').value;
+            if(!orderId) {
+                alert("Please enter a valid Order ID");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('order_id', orderId);
+
+            fetch('/track_order', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                let resDiv = document.getElementById('trackResult');
+                if(data.success) {
+                    resDiv.innerHTML = `
+                        <p><b>Item:</b> ${data.order.item} (Qty: ${data.order.quantity})</p>
+                        <p><b>Status:</b> <span style="color: #00ffcc; font-weight: bold;">${data.order.status}</span></p>
+                    `;
+                } else {
+                    resDiv.innerHTML = `<p style="color: #ff6b6b;">${data.message}</p>`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

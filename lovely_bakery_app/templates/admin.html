@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lovely Bakery - Admin Portal</title>
+    {% if not show_login %}
+    <meta http-equiv="refresh" content="30">
+    {% endif %}
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #2c1d11; margin: 0; padding: 0; color: #f4e8d8; }
+        header { background: linear-gradient(90deg, #4a2e18, #b8860b); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d4af37; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .container { max-width: 1000px; margin: 30px auto; background: rgba(44, 29, 17, 0.95); padding: 25px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); border: 2px solid #b8860b; margin-bottom: 40px; }
+        .login-box { max-width: 400px; margin: 80px auto; background: rgba(44, 29, 17, 0.95); padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); border: 2px solid #b8860b; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #d4af37; }
+        input, select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #8b5a2b; border-radius: 6px; font-size: 15px; background: #21140b; color: #fff; }
+        button { background: linear-gradient(90deg, #b8860b, #d4af37); color: #21140b; border: none; padding: 10px 15px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:hover { filter: brightness(1.15); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #8b5a2b; padding: 10px; text-align: left; font-size: 13px; }
+        th { background-color: #352214; color: #d4af37; }
+        
+        .logout-btn { background: #8b0000; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; }
+        .clear-btn { background: #b45309; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px; font-weight: bold; border: 1px solid #d4af37; }
+        
+        .action-btns a { padding: 5px 8px; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin: 2px; }
+        .btn-prep { background: #d97706; color: white; }
+        .btn-ready { background: #0284c7; color: white; }
+        .btn-deliv { background: #16a34a; color: white; }
+        .btn-decline { background: #dc2626; color: white; }
+        .btn-remove { background: #991b1b; color: white; padding: 4px 8px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .btn-edit { background: #b8860b; color: #21140b; padding: 4px 8px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold; margin-right: 5px; }
+
+        .error { color: #ff6b6b; margin-bottom: 10px; font-size: 14px; }
+        .live-badge { background: #d4af37; color: #21140b; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        
+        .section-box { background: #21140b; border: 1px solid #b8860b; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+    {% if show_login %}
+    <div class="login-box">
+        <h2>🔒 Businessman Login</h2>
+        <p style="color: #bbb; font-size: 13px; margin-bottom: 20px;">Please enter your authorized credentials to access the business dashboard.</p>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/admin-login">
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" name="username" required placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" name="password" required placeholder="Enter password">
+            </div>
+            <button type="submit" style="margin-top: 10px;">Login to Dashboard</button>
+        </form>
+        <p style="text-align: center; margin-top: 20px;"><a href="/" style="color: #d4af37; text-decoration: none;">← Back to Customer Store</a></p>
+    </div>
+    {% else %}
+    <header>
+        <h2>👨‍🍳 Lovely Bakery - Business Dashboard <span class="live-badge">Auto-Refreshing (30s)</span></h2>
+        <div class="header-actions">
+            <a href="/clear_orders" class="clear-btn" onclick="return confirm('Are you sure you want to clear all orders?');">🧹 Clear All Orders</a>
+            <a href="/admin-logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Add or Edit Cake / Pastry Menu Form -->
+        <div class="section-box">
+            {% if edit_item %}
+                <h3>✏️ Edit Cake / Pastry (ID: #{{ edit_item.id }})</h3>
+                <form method="POST" action="/update_menu_item/{{ edit_item.id }}">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Cake / Pastry Name:</label>
+                            <input type="text" name="item_name" value="{{ edit_item.name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (₹):</label>
+                            <input type="number" name="item_price" value="{{ edit_item.price }}" required>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Weight / Size:</label>
+                            <input type="text" name="item_weight" value="{{ edit_item.weight }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Image URL (Photo Link):</label>
+                            <input type="url" name="item_image" value="{{ edit_item.image }}" required>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button type="submit" style="background: #16a34a; color: white;">Update Item ✓</button>
+                        <a href="/admin-dashboard" style="background: #6b7280; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; width: 100%;">Cancel</a>
+                    </div>
+                </form>
+            {% else %}
+                <h3>➕ Add New Cake / Pastry to Store Menu</h3>
+                <form method="POST" action="/add_menu_item">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Cake / Pastry Name:</label>
+                            <input type="text" name="item_name" required placeholder="e.g. Butterscotch Crunch Cake">
+                        </div>
+                        <div class="form-group">
+                            <label>Price (₹):</label>
+                            <input type="number" name="item_price" required placeholder="e.g. 549">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Weight / Size (e.g. 1 Pound, 500g):</label>
+                            <input type="text" name="item_weight" required placeholder="1 Pound (500g)">
+                        </div>
+                        <div class="form-group">
+                            <label>Image URL (Photo Link):</label>
+                            <input type="url" name="item_image" placeholder="https://image-link.com/photo.jpg">
+                        </div>
+                    </div>
+                    <button type="submit" style="margin-top: 5px;">Publish Item to Menu 🚀</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- Current Menu Items Management (Edit & Remove) -->
+        <div class="section-box">
+            <h3>🍰 Manage Existing Menu Items (Edit / Remove)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Weight</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in menu %}
+                    <tr>
+                        <td>#{{ item.id }}</td>
+                        <td><b>{{ item.name }}</b></td>
+                        <td>{{ item.weight }}</td>
+                        <td>₹{{ item.price }}</td>
+                        <td>
+                            <a href="/admin-dashboard?edit_id={{ item.id }}" class="btn-edit">Edit ✏️</a>
+                            <a href="/remove_menu_item/{{ item.id }}" class="btn-remove" onclick="return confirm('Are you sure you want to remove this item?');">Remove ❌</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #aaa;">No items in menu.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h3>📋 Live Customer Orders Management</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Item & Qty</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><b>#{{ order.id }}</b></td>
+                    <td>{{ order.name }}</td>
+                    <td>📞 {{ order.phone }}</td>
+                    <td>🎂 {{ order.item }} <br><b style="color: #d4af37;">(Qty: {{ order.quantity }})</b></td>
+                    <td>📍 {{ order.location }}</td>
+                    <td><b style="color: #00ffcc;">{{ order.status }}</b></td>
+                    <td class="action-btns">
+                        <a href="/update_status/{{ order.id }}/preparing" class="btn-prep">Prep</a>
+                        <a href="/update_status/{{ order.id }}/ready" class="btn-ready">Ready</a>
+                        <a href="/update_status/{{ order.id }}/delivered" class="btn-deliv">Deliver</a>
+                        <a href="/update_status/{{ order.id }}/declined" class="btn-decline">Decline</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #aaa; padding: 20px;">No orders found. Dashboard is clean!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <br>
+        <a href="/" target="_blank" style="color: #d4af37; font-weight: bold; text-decoration: none;">🌐 Open Customer Storefront (New Tab)</a>
+    </div>
+    {% endif %}
+
+</body>
+</html>
