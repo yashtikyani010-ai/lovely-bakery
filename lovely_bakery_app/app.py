@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo  # सही भारतीय समय (IST) के लिए
+from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
 app = Flask(__name__)
@@ -59,12 +59,8 @@ def place_order():
     phone = request.form.get('customer_phone')
     item = request.form.get('cake_item')
     quantity = request.form.get('quantity')
-    location = request.form.get('customer_location')
-    
-    # कोलकाता / भारतीय समय (IST) के हिसाब से ठीक 2 घंटे बाद का समय निकालना
-    ist_zone = ZoneInfo("Asia/Kolkata")
-    now_ist = datetime.now(ist_zone)
-    pickup_time = (now_ist + timedelta(hours=2)).strftime('%I:%M %p, %d %b')
+    delivery_type = request.form.get('delivery_type') # Store Pickup या Home Delivery
+    location = request.form.get('customer_location') if delivery_type == 'Delivery' else 'Store Pickup (Free)'
     
     new_id = max((o['id'] for o in data['orders']), default=0) + 1
 
@@ -74,13 +70,14 @@ def place_order():
         "phone": phone,
         "item": item,
         "quantity": int(quantity),
+        "delivery_type": delivery_type,
         "location": location,
-        "pickup_time": pickup_time,
-        "status": "Pending"
+        "pickup_time": "Will be calculated after confirmation ⏳",
+        "status": "Pending Confirmation ⏳"
     }
     data['orders'].append(new_order)
     save_data(data)
-    return jsonify({"success": True, "order_id": new_id, "pickup_time": pickup_time, "message": "Order placed successfully!"})
+    return jsonify({"success": True, "order_id": new_id, "message": "Order placed successfully!"})
 
 @app.route('/track_order', methods=['POST'])
 def track_order():
@@ -190,6 +187,25 @@ def remove_menu_item(item_id):
     save_data(data)
     return redirect(url_for('admin_dashboard'))
 
+# जब एडमिन आर्डर कन्फर्म करेगा, तब से 2 घंटे का टाइमर शुरू होगा
+@app.route('/confirm_order/<int:order_id>')
+def confirm_order(order_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('admin_login'))
+    
+    data = load_data()
+    ist_zone = ZoneInfo("Asia/Kolkata")
+    now_ist = datetime.now(ist_zone)
+    pickup_time = (now_ist + timedelta(hours=2)).strftime('%I:%M %p, %d %b')
+    
+    for order in data['orders']:
+        if order['id'] == order_id:
+            order['pickup_time'] = pickup_time
+            order['status'] = 'Preparing 👨‍🍳 (Confirmed)'
+            
+    save_data(data)
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/update_status/<int:order_id>/<status>')
 def update_status(order_id, status):
     if not session.get('logged_in'):
@@ -197,7 +213,6 @@ def update_status(order_id, status):
     
     data = load_data()
     status_map = {
-        'preparing': 'Preparing 👨‍🍳',
         'ready': 'Ready for Pickup / Out for Delivery 📦',
         'delivered': 'Completed / Delivered ✅',
         'declined': 'Declined ❌'
@@ -205,7 +220,7 @@ def update_status(order_id, status):
     
     for order in data['orders']:
         if order['id'] == order_id:
-            order['status'] = status_map.get(status, 'Pending')
+            order['status'] = status_map.get(status, order['status'])
             
     save_data(data)
     return redirect(url_for('admin_dashboard'))
