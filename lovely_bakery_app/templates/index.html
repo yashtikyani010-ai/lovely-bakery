@@ -321,12 +321,12 @@
 
         <!-- Track Order Section -->
         <div class="track-box">
-            <h3>🔍 Track Your Order & Pickup Time</h3>
+            <h3>🔍 Track Your Order</h3>
             <div class="form-group">
                 <label for="track_id">Enter Order ID:</label>
                 <input type="number" id="track_id" placeholder="e.g. 1, 2, 3">
             </div>
-            <button type="button" class="track-btn" onclick="trackOrder()">Check Status & Timing</button>
+            <button type="button" class="track-btn" onclick="trackOrder()">Check Status</button>
             <div id="trackResult" style="margin-top: 15px; font-size: 15px;"></div>
         </div>
 
@@ -374,7 +374,7 @@
             })
             .then(res => res.json())
             .then(data => {
-                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b><br>⏰ <b>Ready by:</b> ${data.pickup_time}`;
+                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b><br>⏰ <b>Your order will be ready in 2 hours.</b>`;
                 document.getElementById('orderForm').reset();
                 document.getElementById('quantity').value = "1";
             });
@@ -400,7 +400,7 @@
                         <p><b>Status:</b> <span style="color: #00ffcc; font-weight: bold;">${data.order.status}</span></p>
                         <p><b>Address / Info:</b> ${data.order.location}</p>
                         <p style="background: rgba(212,175,55,0.2); padding: 10px; border-radius: 6px; border: 1px solid #d4af37;">
-                            ⏰ <b>Estimated Timing:</b> Please collect or get delivery by <b style="color: #fff;">${data.order.pickup_time}</b> (within 2 hours).
+                            ⏰ <b>Notice:</b> Your order will be ready in 2 hours.
                         </p>
                     `;
                 } else {
