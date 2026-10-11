@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lovely Bakery - Admin Portal</title>
-    <!-- Auto reload admin dashboard every 60 seconds (1 minute) -->
     {% if not show_login %}
     <meta http-equiv="refresh" content="60">
     {% endif %}
@@ -12,7 +11,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #2c1d11; margin: 0; padding: 0; color: #f4e8d8; }
         header { background: linear-gradient(90deg, #4a2e18, #b8860b); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #d4af37; }
         .header-actions { display: flex; gap: 10px; align-items: center; }
-        .container { max-width: 1000px; margin: 30px auto; background: rgba(44, 29, 17, 0.95); padding: 25px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); border: 2px solid #b8860b; margin-bottom: 40px; }
+        .container { max-width: 1050px; margin: 30px auto; background: rgba(44, 29, 17, 0.95); padding: 25px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); border: 2px solid #b8860b; margin-bottom: 40px; }
         .login-box { max-width: 400px; margin: 80px auto; background: rgba(44, 29, 17, 0.95); padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.6); border: 2px solid #b8860b; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #d4af37; }
@@ -63,7 +62,7 @@
 
     <div class="container">
         
-        <!-- Add / Edit Form with Age Group Selection -->
+        <!-- Add / Edit Form -->
         <div class="section-box">
             {% if edit_item %}
                 <h3>✏️ Edit Cake (ID: #{{ edit_item.id }})</h3>
@@ -164,10 +163,10 @@
         </div>
 
         <!-- Live Orders -->
-        <h3>📋 Live Customer Orders</h3>
+        <h3>📋 Live Customer Orders (Manual Confirmation & Timer)</h3>
         <table>
             <thead>
-                <tr><th>ID</th><th>Customer</th><th>Phone</th><th>Item & Qty</th><th>Address / Note</th><th>Pickup Time</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>ID</th><th>Customer</th><th>Phone</th><th>Item & Qty</th><th>Type / Info</th><th>Pickup / Ready Time</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
                 {% for order in orders %}
@@ -176,14 +175,14 @@
                     <td>{{ order.name }}</td>
                     <td>📞 {{ order.phone }}</td>
                     <td>🎂 {{ order.item }} (Qty: {{ order.quantity }})</td>
-                    <td>📍 {{ order.location }}</td>
+                    <td><b>{{ order.delivery_type }}</b><br><small>{{ order.location }}</small></td>
                     <td><b style="color: #d4af37;">⏰ {{ order.pickup_time }}</b></td>
                     <td><b style="color: #00ffcc;">{{ order.status }}</b></td>
                     <td>
-                        <a href="/update_status/{{ order.id }}/preparing" style="background:#d97706; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Prep</a>
-                        <a href="/update_status/{{ order.id }}/ready" style="background:#0284c7; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Ready</a>
-                        <a href="/update_status/{{ order.id }}/delivered" style="background:#16a34a; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Completed</a>
-                        <a href="/update_status/{{ order.id }}/declined" style="background:#dc2626; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Decline</a>
+                        <a href="/confirm_order/{{ order.id }}" style="background:#16a34a; color:white; padding:4px 6px; text-decoration:none; border-radius:4px; display:inline-block; margin-bottom:3px; font-weight:bold;">Confirm & Start ⏳</a><br>
+                        <a href="/update_status/{{ order.id }}/ready" style="background:#0284c7; color:white; padding:4px 6px; text-decoration:none; border-radius:4px; display:inline-block; margin-bottom:3px;">Ready</a>
+                        <a href="/update_status/{{ order.id }}/delivered" style="background:#16a34a; color:white; padding:4px 6px; text-decoration:none; border-radius:4px; display:inline-block; margin-bottom:3px;">Completed</a>
+                        <a href="/update_status/{{ order.id }}/declined" style="background:#dc2626; color:white; padding:4px 6px; text-decoration:none; border-radius:4px; display:inline-block;">Decline</a>
                     </td>
                 </tr>
                 {% else %}
