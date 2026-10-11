@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lovely Bakery - Order & Track</title>
-    <!-- Auto reload customer page every 60 seconds (1 minute) -->
+    <title>Lovely Bakery - Age-Wise Variety</title>
     <meta http-equiv="refresh" content="60">
     <style>
         body {
@@ -26,7 +25,7 @@
         }
 
         .container {
-            max-width: 650px;
+            max-width: 750px;
             margin: 30px auto;
             background: rgba(44, 29, 17, 0.95);
             padding: 30px;
@@ -34,6 +33,34 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.6);
             border: 2px solid #b8860b;
             margin-bottom: 50px;
+        }
+
+        .age-filter-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+            white-space: nowrap;
+        }
+
+        .age-btn {
+            background: #352214;
+            color: #f4e8d8;
+            border: 1px solid #8b5a2b;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .age-btn:hover, .age-btn.active {
+            background: linear-gradient(90deg, #b8860b, #d4af37);
+            color: #21140b;
+            border-color: #d4af37;
         }
 
         .catalog {
@@ -65,11 +92,17 @@
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.2s;
         }
 
-        .cake-card img:hover {
-            transform: scale(1.03);
+        .age-badge {
+            display: inline-block;
+            background: #b8860b;
+            color: #21140b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
         }
 
         .zoom-hint {
@@ -89,6 +122,7 @@
             cursor: pointer;
             margin-top: 8px;
             font-weight: bold;
+            width: 100%;
         }
 
         .cake-card.selected .select-btn {
@@ -129,11 +163,6 @@
             font-size: 18px;
             cursor: pointer;
             font-weight: bold;
-            transition: filter 0.3s;
-        }
-
-        button[type="submit"]:hover, .track-btn:hover {
-            filter: brightness(1.15);
         }
 
         .track-box {
@@ -155,7 +184,7 @@
             font-weight: bold;
         }
 
-        /* Modal Overlay for Full Image Zoom */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -171,24 +200,20 @@
             padding: 20px;
             box-sizing: border-box;
         }
-
         .modal-content {
             max-width: 90%;
             max-height: 75vh;
             border-radius: 10px;
             border: 3px solid #d4af37;
             object-fit: contain;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
         }
-
         .modal-caption {
             color: #d4af37;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             margin-top: 15px;
             text-align: center;
         }
-
         .close-modal {
             position: absolute;
             top: 20px;
@@ -204,11 +229,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 2px solid #d4af37;
-        }
-
-        .close-modal:hover {
-            background: #ff0000;
         }
     </style>
 </head>
@@ -216,37 +236,46 @@
 
     <header>
         <h1>🎂 Lovely Bakery</h1>
-        <p>Premium Cakes & Pastries Crafted with Elegance</p>
+        <p>Cakes Curated by Age Groups (1 to 70 Years)</p>
     </header>
 
     <div class="container">
-        <h2>Select Item for Review & Order</h2>
-        <p style="font-size: 13px; color: #bbb; text-align: center; margin-bottom: 20px;">Click on any photo to zoom in & view full size</p>
+        <h2>Select Age Category</h2>
         
-        <div class="catalog">
+        <!-- Age Group Filter Slider (10-year gaps) -->
+        <div class="age-filter-container">
+            {% for age in age_groups %}
+            <a href="/?age_group={{ age }}" class="age-btn {% if current_age == age %}active{% endif %}">
+                {% if age == 'All' %}🌟 All Cakes{% else %}🎂 Age {{ age }} yrs{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+
+        <h3>Menu for Age: <span style="color: #00ffcc;">{{ current_age }}</span></h3>
+        <div class="catalog" style="margin-top: 15px;">
             {% if menu %}
                 {% for item in menu %}
-                <div class="cake-card {% if loop.first %}selected{% endif %}" id="card-{{ loop.index0 }}">
-                    <!-- Click image to open zoom modal -->
-                    <img src="{{ item.image }}" alt="{{ item.name }}" onclick="openModal('{{ item.image }}', '{{ item.name }} - ₹{{ item.price }} ({{ item.weight }})')">
-                    <div class="zoom-hint" onclick="openModal('{{ item.image }}', '{{ item.name }} - ₹{{ item.price }} ({{ item.weight }})')">🔍 Click to Zoom</div>
+                <div class="cake-card {% if loop.first and current_age == 'All' %}selected{% endif %}" id="card-{{ loop.index0 }}">
+                    <img src="{{ item.image }}" alt="{{ item.name }}" onclick="openModal('{{ item.image }}', '{{ item.name }} - ₹{{ item.price }}')">
+                    <div class="zoom-hint" onclick="openModal('{{ item.image }}', '{{ item.name }} - ₹{{ item.price }}')">🔍 Zoom Photo</div>
                     
-                    <h4 style="margin: 8px 0 4px 0;">{{ item.name }}</h4>
-                    <p style="margin: 0; color: #d4af37; font-size: 13px;">⚖ {{ item.weight }}</p>
-                    <p style="margin: 4px 0; font-weight: bold; font-size: 15px;">₹{{ item.price }}</p>
+                    <h4 style="margin: 8px 0 2px 0;">{{ item.name }}</h4>
+                    <span class="age-badge">Age: {{ item.age_group }} yrs</span>
+                    <p style="margin: 4px 0; color: #d4af37; font-size: 13px;">⚖ {{ item.weight }}</p>
+                    <p style="margin: 0; font-weight: bold; font-size: 15px;">₹{{ item.price }}</p>
                     
-                    <button type="button" class="select-btn" onclick="selectItem('{{ item.name }} ({{ item.weight }})', 'card-{{ loop.index0 }}')">
-                        {% if loop.first %}Selected ✓{% else %}Select Item{% endif %}
+                    <button type="button" class="select-btn" onclick="selectItem('{{ item.name }} (Age: {{ item.age_group }})', 'card-{{ loop.index0 }}')">
+                        Select Item
                     </button>
                 </div>
                 {% endfor %}
             {% else %}
-                <p style="text-align: center; color: #aaa; grid-column: span 2;">No items available in menu right now.</p>
+                <p style="text-align: center; color: #aaa; grid-column: span 2; padding: 20px;">No cakes available for this age group right now.</p>
             {% endif %}
         </div>
 
         <form id="orderForm">
-            <input type="hidden" id="cake_item" name="cake_item" value="{% if menu %}{{ menu[0].name }} ({{ menu[0].weight }}){% endif %}">
+            <input type="hidden" id="cake_item" name="cake_item" value="{% if menu %}{{ menu[0].name }} (Age: {{ menu[0].age_group }}){% endif %}">
 
             <div class="form-group">
                 <label for="customer_name">Your Name:</label>
@@ -265,7 +294,7 @@
 
             <div class="form-group">
                 <label for="customer_location">Delivery Location / Address:</label>
-                <textarea id="customer_location" name="customer_location" rows="2" required placeholder="Enter delivery address or landmark"></textarea>
+                <textarea id="customer_location" name="customer_location" rows="2" required placeholder="Enter delivery address"></textarea>
             </div>
 
             <button type="submit">Place Premium Order 🚀</button>
@@ -289,7 +318,7 @@
         </div>
     </div>
 
-    <!-- Image Zoom Modal -->
+    <!-- Modal -->
     <div id="imageModal" class="modal" onclick="closeModal()">
         <span class="close-modal">&times;</span>
         <img class="modal-content" id="modalImg">
@@ -309,13 +338,9 @@
         }
 
         function openModal(imgSrc, captionText) {
-            let modal = document.getElementById('imageModal');
-            let modalImg = document.getElementById('modalImg');
-            let captionTextDiv = document.getElementById('modalCaption');
-            
-            modal.style.display = "flex";
-            modalImg.src = imgSrc;
-            captionTextDiv.innerText = captionText;
+            document.getElementById('imageModal').style.display = "flex";
+            document.getElementById('modalImg').src = imgSrc;
+            document.getElementById('modalCaption').innerText = captionText;
         }
 
         function closeModal() {
@@ -332,7 +357,7 @@
             })
             .then(res => res.json())
             .then(data => {
-                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Your Order ID is: <b style="color: #fff; font-size: 18px;">#${data.order_id}</b>`;
+                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b>`;
                 document.getElementById('orderForm').reset();
                 document.getElementById('quantity').value = "1";
             });
@@ -340,10 +365,7 @@
 
         function trackOrder() {
             let orderId = document.getElementById('track_id').value;
-            if(!orderId) {
-                alert("Please enter a valid Order ID");
-                return;
-            }
+            if(!orderId) { alert("Please enter Order ID"); return; }
 
             let formData = new FormData();
             formData.append('order_id', orderId);
@@ -356,10 +378,7 @@
             .then(data => {
                 let resDiv = document.getElementById('trackResult');
                 if(data.success) {
-                    resDiv.innerHTML = `
-                        <p><b>Item:</b> ${data.order.item} (Qty: ${data.order.quantity})</p>
-                        <p><b>Status:</b> <span style="color: #00ffcc; font-weight: bold;">${data.order.status}</span></p>
-                    `;
+                    resDiv.innerHTML = `<p><b>Item:</b> ${data.order.item}</p><p><b>Status:</b> <span style="color: #00ffcc;">${data.order.status}</span></p>`;
                 } else {
                     resDiv.innerHTML = `<p style="color: #ff6b6b;">${data.message}</p>`;
                 }
