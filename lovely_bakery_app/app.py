@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo  # सही भारतीय समय (IST) के लिए
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
 app = Flask(__name__)
@@ -60,9 +61,10 @@ def place_order():
     quantity = request.form.get('quantity')
     location = request.form.get('customer_location')
     
-    # 2 घंटे बाद का समय कैलकुलेट करना
-    now = datetime.now()
-    pickup_time = (now + timedelta(hours=2)).strftime('%I:%M %p, %d %b')
+    # कोलकाता / भारतीय समय (IST) के हिसाब से ठीक 2 घंटे बाद का समय निकालना
+    ist_zone = ZoneInfo("Asia/Kolkata")
+    now_ist = datetime.now(ist_zone)
+    pickup_time = (now_ist + timedelta(hours=2)).strftime('%I:%M %p, %d %b')
     
     new_id = max((o['id'] for o in data['orders']), default=0) + 1
 
@@ -196,8 +198,8 @@ def update_status(order_id, status):
     data = load_data()
     status_map = {
         'preparing': 'Preparing 👨‍🍳',
-        'ready': 'Ready for Pickup 📦',
-        'delivered': 'Completed / Picked Up ✅',
+        'ready': 'Ready for Pickup / Out for Delivery 📦',
+        'delivered': 'Completed / Delivered ✅',
         'declined': 'Declined ❌'
     }
     
