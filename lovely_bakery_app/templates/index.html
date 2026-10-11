@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lovely Bakery - Age-Wise Variety</title>
-    <!-- Auto reload customer page every 60 seconds (1 minute) -->
     <meta http-equiv="refresh" content="60">
     <style>
         body {
@@ -163,6 +162,7 @@
             font-size: 14px;
             text-align: center;
             margin-bottom: 15px;
+            line-height: 1.5;
         }
 
         button[type="submit"], .track-btn {
@@ -303,25 +303,36 @@
                 <input type="number" id="quantity" name="quantity" min="1" max="10" value="1" required>
             </div>
 
-            <!-- Delivery Address with ₹35/km charge -->
+            <!-- Delivery Type Selection -->
             <div class="form-group">
-                <label for="customer_location">Delivery Address <span style="color: #ffcc00; font-size: 13px;">(For delivery ₹35 per kilometer charge)</span>:</label>
-                <textarea id="customer_location" name="customer_location" rows="2" required placeholder="Enter full delivery address or landmark"></textarea>
+                <label for="delivery_type">Choose Receiving Option:</label>
+                <select id="delivery_type" name="delivery_type" onchange="toggleAddressBox()" required>
+                    <option value="Store Pickup">Store Pickup (Come to shop)</option>
+                    <option value="Delivery">Home Delivery (₹35 per km charge)</option>
+                </select>
             </div>
 
-            <!-- Simple English Notice -->
+            <!-- Address Box (Hidden by default if pickup is selected) -->
+            <div class="form-group" id="addressGroup" style="display: none;">
+                <label for="customer_location">Delivery Address:</label>
+                <textarea id="customer_location" name="customer_location" rows="2" placeholder="Enter full delivery address or landmark"></textarea>
+            </div>
+
+            <!-- Simple English Payment & Delivery Rules -->
             <div class="pickup-notice">
-                ✨ <b>Note:</b> You can pick up your fresh cake directly from our shop for free, or get doorstep home delivery by paying a delivery charge of ₹35 per kilometer. 💖
+                ✨ <b>Payment & Delivery Info:</b><br>
+                • For <b>Home Delivery</b>, Cash on Delivery only.<br>
+                • For <b>Store Pickup</b> (coming to the shop), Cash, UPI, and online payments are all available! 💖
             </div>
 
-            <button type="submit">Place Premium Order 🚀</button>
+            <button type="submit">Place Order 🚀</button>
         </form>
 
         <p id="responseMsg" style="text-align: center; margin-top: 15px; font-weight: bold; color: #d4af37;"></p>
 
         <!-- Track Order Section -->
         <div class="track-box">
-            <h3>🔍 Track Your Order</h3>
+            <h3>🔍 Track Your Order Status</h3>
             <div class="form-group">
                 <label for="track_id">Enter Order ID:</label>
                 <input type="number" id="track_id" placeholder="e.g. 1, 2, 3">
@@ -354,6 +365,20 @@
             document.getElementById('cake_item').value = itemName;
         }
 
+        function toggleAddressBox() {
+            let type = document.getElementById('delivery_type').value;
+            let addressGroup = document.getElementById('addressGroup');
+            let addressInput = document.getElementById('customer_location');
+            if (type === 'Delivery') {
+                addressGroup.style.display = 'block';
+                addressInput.required = true;
+            } else {
+                addressGroup.style.display = 'none';
+                addressInput.required = false;
+                addressInput.value = '';
+            }
+        }
+
         function openModal(imgSrc, captionText) {
             document.getElementById('imageModal').style.display = "flex";
             document.getElementById('modalImg').src = imgSrc;
@@ -374,9 +399,10 @@
             })
             .then(res => res.json())
             .then(data => {
-                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b><br>⏰ <b>Your order will be ready in 2 hours.</b>`;
+                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b><br>⏳ <b>Status: Pending Confirmation. Once accepted by shop, 2-hour timer will start.</b>`;
                 document.getElementById('orderForm').reset();
                 document.getElementById('quantity').value = "1";
+                toggleAddressBox();
             });
         });
 
@@ -397,10 +423,10 @@
                 if(data.success) {
                     resDiv.innerHTML = `
                         <p><b>Item:</b> ${data.order.item} (Qty: ${data.order.quantity})</p>
+                        <p><b>Type:</b> ${data.order.delivery_type}</p>
                         <p><b>Status:</b> <span style="color: #00ffcc; font-weight: bold;">${data.order.status}</span></p>
-                        <p><b>Address / Info:</b> ${data.order.location}</p>
                         <p style="background: rgba(212,175,55,0.2); padding: 10px; border-radius: 6px; border: 1px solid #d4af37;">
-                            ⏰ <b>Notice:</b> Your order will be ready in 2 hours.
+                            ⏰ <b>Ready / Pickup Time:</b> <b style="color: #fff;">${data.order.pickup_time}</b>
                         </p>
                     `;
                 } else {
