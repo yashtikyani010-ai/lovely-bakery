@@ -303,9 +303,15 @@
                 <input type="number" id="quantity" name="quantity" min="1" max="10" value="1" required>
             </div>
 
-            <!-- प्यार भरा स्टोर पिकअप नोटिस -->
+            <!-- Delivery Address with Charge Info -->
+            <div class="form-group">
+                <label for="customer_location">Delivery Address <span style="color: #ffcc00; font-size: 13px;">(For delivery ₹100 charge)</span>:</label>
+                <textarea id="customer_location" name="customer_location" rows="2" required placeholder="Enter full delivery address or landmark"></textarea>
+            </div>
+
+            <!-- Simple English Sweet Notice -->
             <div class="pickup-notice">
-                ✨ <b>प्यारा सा निवेदन:</b> भैया/दीदी, आपकी सुविधा और ताज़े केक की क्वालिटी के लिए यह ऑर्डर आपको <b>हमारी दुकान पर आकर ही लेना पड़ेगा</b>। होम डिलीवरी की सुविधा उपलब्ध नहीं है! 💖
+                ✨ <b>Note:</b> You can pick up your fresh cake directly from our shop for free, or get doorstep home delivery by paying an extra delivery charge of ₹100. 💖
             </div>
 
             <button type="submit">Place Premium Order 🚀</button>
@@ -368,7 +374,7 @@
             })
             .then(res => res.json())
             .then(data => {
-                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b><br>⏰ <b>Ready for Store Pickup by:</b> ${data.pickup_time}`;
+                document.getElementById('responseMsg').innerHTML = `🎉 Order placed successfully! Order ID: <b style="color: #fff;">#${data.order_id}</b><br>⏰ <b>Ready by:</b> ${data.pickup_time}`;
                 document.getElementById('orderForm').reset();
                 document.getElementById('quantity').value = "1";
             });
@@ -392,8 +398,9 @@
                     resDiv.innerHTML = `
                         <p><b>Item:</b> ${data.order.item} (Qty: ${data.order.quantity})</p>
                         <p><b>Status:</b> <span style="color: #00ffcc; font-weight: bold;">${data.order.status}</span></p>
+                        <p><b>Address / Info:</b> ${data.order.location}</p>
                         <p style="background: rgba(212,175,55,0.2); padding: 10px; border-radius: 6px; border: 1px solid #d4af37;">
-                            ⏰ <b>Store Pickup Timing:</b> कृपया आप अपना आर्डर ठीक <b style="color: #fff;">${data.order.pickup_time}</b> तक हमारी दुकान पर आकर ले जाएं। (होम डिलीवरी नहीं है)
+                            ⏰ <b>Estimated Timing:</b> Please collect or get delivery by <b style="color: #fff;">${data.order.pickup_time}</b> (within 2 hours).
                         </p>
                     `;
                 } else {
