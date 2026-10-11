@@ -58,6 +58,7 @@ def place_order():
     phone = request.form.get('customer_phone')
     item = request.form.get('cake_item')
     quantity = request.form.get('quantity')
+    location = request.form.get('customer_location')
     
     # 2 घंटे बाद का समय कैलकुलेट करना
     now = datetime.now()
@@ -71,7 +72,7 @@ def place_order():
         "phone": phone,
         "item": item,
         "quantity": int(quantity),
-        "location": "Store Pickup (No Home Delivery)",
+        "location": location,
         "pickup_time": pickup_time,
         "status": "Pending"
     }
@@ -196,7 +197,7 @@ def update_status(order_id, status):
     status_map = {
         'preparing': 'Preparing 👨‍🍳',
         'ready': 'Ready for Pickup 📦',
-        'delivered': 'Picked Up / Completed ✅',
+        'delivered': 'Completed / Picked Up ✅',
         'declined': 'Declined ❌'
     }
     
