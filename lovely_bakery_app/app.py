@@ -5,41 +5,30 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 app = Flask(__name__)
 app.secret_key = 'lovely_bakery_secret_key_stark'
 
-# डेटा को परमानेंट सेव करने के लिए JSON फाइल का नाम
 DB_FILE = 'database.json'
 
-# डिफ़ॉल्ट डेटा (अगर फाइल न हो)
 default_data = {
     "menu": [
         {
             "id": 1,
-            "name": "Choco Truffle Gold Cake",
+            "name": "Kids Super Fun Cake",
             "price": "699",
-            "weight": "1 Pound (500g)",
+            "weight": "1 Pound",
+            "age_group": "1-10",
             "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=60"
         },
         {
             "id": 2,
-            "name": "Royal Red Velvet Pastry",
-            "price": "199",
-            "weight": "250g",
-            "image": "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=500&auto=format&fit=crop&q=60"
+            "name": "Teenager Party Delight",
+            "price": "799",
+            "weight": "1.5 Pounds",
+            "age_group": "10-20",
+            "image": "https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=500&auto=format&fit=crop&q=60"
         }
     ],
-    "orders": [
-        {
-            "id": 1, 
-            "name": "Rahul Sharma", 
-            "phone": "9876543210", 
-            "item": "Choco Truffle Gold Cake (1 Pound (500g))", 
-            "quantity": 1, 
-            "location": "Civil Lines, Bareilly", 
-            "status": "Pending"
-        }
-    ]
+    "orders": []
 }
 
-# डेटा लोड करने का फंक्शन
 def load_data():
     if os.path.exists(DB_FILE):
         try:
@@ -49,7 +38,6 @@ def load_data():
             return default_data
     return default_data
 
-# डेटा सेव करने का फंक्शन
 def save_data(data):
     try:
         with open(DB_FILE, 'w', encoding='utf-8') as f:
@@ -60,7 +48,17 @@ def save_data(data):
 @app.route('/')
 def index():
     data = load_data()
-    return render_template('index.html', menu=data['menu'])
+    selected_age = request.args.get('age_group', 'All')
+    
+    if selected_age and selected_age != 'All':
+        filtered_menu = [item for item in data['menu'] if item.get('age_group') == selected_age]
+    else:
+        filtered_menu = data['menu']
+
+    # 10-10 साल के गैप वाले एज ग्रुप्स
+    age_groups = ["All", "1-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70"]
+
+    return render_template('index.html', menu=filtered_menu, age_groups=age_groups, current_age=selected_age)
 
 @app.route('/place_order', methods=['POST'])
 def place_order():
@@ -128,7 +126,9 @@ def admin_dashboard():
     if edit_id:
         edit_item = next((item for item in data['menu'] if item['id'] == edit_id), None)
 
-    return render_template('admin.html', show_login=False, orders=data['orders'], menu=data['menu'], edit_item=edit_item)
+    age_groups = ["1-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70"]
+
+    return render_template('admin.html', show_login=False, orders=data['orders'], menu=data['menu'], edit_item=edit_item, age_groups=age_groups)
 
 @app.route('/add_menu_item', methods=['POST'])
 def add_menu_item():
@@ -139,6 +139,7 @@ def add_menu_item():
     name = request.form.get('item_name')
     price = request.form.get('item_price')
     weight = request.form.get('item_weight')
+    age_group = request.form.get('age_group')
     image = request.form.get('item_image')
     
     if not image:
@@ -151,6 +152,7 @@ def add_menu_item():
         "name": name,
         "price": price,
         "weight": weight,
+        "age_group": age_group,
         "image": image
     })
     save_data(data)
@@ -165,6 +167,7 @@ def update_menu_item(item_id):
     name = request.form.get('item_name')
     price = request.form.get('item_price')
     weight = request.form.get('item_weight')
+    age_group = request.form.get('age_group')
     image = request.form.get('item_image')
     
     for item in data['menu']:
@@ -172,6 +175,7 @@ def update_menu_item(item_id):
             item['name'] = name
             item['price'] = price
             item['weight'] = weight
+            item['age_group'] = age_group
             if image:
                 item['image'] = image
             break
