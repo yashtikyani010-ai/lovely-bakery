@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lovely Bakery - Admin Portal</title>
+    <!-- Auto reload admin dashboard every 60 seconds (1 minute) -->
     {% if not show_login %}
-    <meta http-equiv="refresh" content="30">
+    <meta http-equiv="refresh" content="60">
     {% endif %}
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #2c1d11; margin: 0; padding: 0; color: #f4e8d8; }
@@ -53,7 +54,7 @@
     </div>
     {% else %}
     <header>
-        <h2>👨‍🍳 Lovely Bakery - Business Dashboard <span class="live-badge">Auto-Refreshing (30s)</span></h2>
+        <h2>👨‍🍳 Lovely Bakery - Business Dashboard <span class="live-badge">Auto-Refreshing (1 min)</span></h2>
         <div class="header-actions">
             <a href="/clear_orders" class="clear-btn" onclick="return confirm('Clear all orders?');">🧹 Clear Orders</a>
             <a href="/admin-logout" class="logout-btn">Logout</a>
@@ -163,10 +164,10 @@
         </div>
 
         <!-- Live Orders -->
-        <h3>📋 Live Customer Orders</h3>
+        <h3>📋 Live Customer Orders (Store Pickup Only)</h3>
         <table>
             <thead>
-                <tr><th>ID</th><th>Customer</th><th>Phone</th><th>Item & Qty</th><th>Location</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>ID</th><th>Customer</th><th>Phone</th><th>Item & Qty</th><th>Pickup Time</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
                 {% for order in orders %}
@@ -175,12 +176,12 @@
                     <td>{{ order.name }}</td>
                     <td>📞 {{ order.phone }}</td>
                     <td>🎂 {{ order.item }} (Qty: {{ order.quantity }})</td>
-                    <td>📍 {{ order.location }}</td>
+                    <td><b style="color: #d4af37;">⏰ {{ order.pickup_time }}</b></td>
                     <td><b style="color: #00ffcc;">{{ order.status }}</b></td>
                     <td>
                         <a href="/update_status/{{ order.id }}/preparing" style="background:#d97706; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Prep</a>
                         <a href="/update_status/{{ order.id }}/ready" style="background:#0284c7; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Ready</a>
-                        <a href="/update_status/{{ order.id }}/delivered" style="background:#16a34a; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Deliver</a>
+                        <a href="/update_status/{{ order.id }}/delivered" style="background:#16a34a; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Completed</a>
                         <a href="/update_status/{{ order.id }}/declined" style="background:#dc2626; color:white; padding:4px 6px; text-decoration:none; border-radius:4px;">Decline</a>
                     </td>
                 </tr>
