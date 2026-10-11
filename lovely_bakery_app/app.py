@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
 app = Flask(__name__)
@@ -16,14 +17,6 @@ default_data = {
             "weight": "1 Pound",
             "age_group": "1-10",
             "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=60"
-        },
-        {
-            "id": 2,
-            "name": "Teenager Party Delight",
-            "price": "799",
-            "weight": "1.5 Pounds",
-            "age_group": "10-20",
-            "image": "https://images.unsplash.com/photo-1535141192574-5d4897c13136?w=500&auto=format&fit=crop&q=60"
         }
     ],
     "orders": []
@@ -55,9 +48,7 @@ def index():
     else:
         filtered_menu = data['menu']
 
-    # 10-10 साल के गैप वाले एज ग्रुप्स
     age_groups = ["All", "1-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70"]
-
     return render_template('index.html', menu=filtered_menu, age_groups=age_groups, current_age=selected_age)
 
 @app.route('/place_order', methods=['POST'])
@@ -67,7 +58,10 @@ def place_order():
     phone = request.form.get('customer_phone')
     item = request.form.get('cake_item')
     quantity = request.form.get('quantity')
-    location = request.form.get('customer_location')
+    
+    # 2 घंटे बाद का समय कैलकुलेट करना
+    now = datetime.now()
+    pickup_time = (now + timedelta(hours=2)).strftime('%I:%M %p, %d %b')
     
     new_id = max((o['id'] for o in data['orders']), default=0) + 1
 
@@ -77,12 +71,13 @@ def place_order():
         "phone": phone,
         "item": item,
         "quantity": int(quantity),
-        "location": location,
+        "location": "Store Pickup (No Home Delivery)",
+        "pickup_time": pickup_time,
         "status": "Pending"
     }
     data['orders'].append(new_order)
     save_data(data)
-    return jsonify({"success": True, "order_id": new_id, "message": "Order placed successfully!"})
+    return jsonify({"success": True, "order_id": new_id, "pickup_time": pickup_time, "message": "Order placed successfully!"})
 
 @app.route('/track_order', methods=['POST'])
 def track_order():
@@ -127,7 +122,6 @@ def admin_dashboard():
         edit_item = next((item for item in data['menu'] if item['id'] == edit_id), None)
 
     age_groups = ["1-10", "10-20", "20-30", "30-40", "40-50", "50-60", "60-70"]
-
     return render_template('admin.html', show_login=False, orders=data['orders'], menu=data['menu'], edit_item=edit_item, age_groups=age_groups)
 
 @app.route('/add_menu_item', methods=['POST'])
@@ -201,8 +195,8 @@ def update_status(order_id, status):
     data = load_data()
     status_map = {
         'preparing': 'Preparing 👨‍🍳',
-        'ready': 'Ready for Delivery 📦',
-        'delivered': 'Delivered ✅',
+        'ready': 'Ready for Pickup 📦',
+        'delivered': 'Picked Up / Completed ✅',
         'declined': 'Declined ❌'
     }
     
