@@ -164,10 +164,10 @@
         </div>
 
         <!-- Live Orders -->
-        <h3>📋 Live Customer Orders (Store Pickup Only)</h3>
+        <h3>📋 Live Customer Orders</h3>
         <table>
             <thead>
-                <tr><th>ID</th><th>Customer</th><th>Phone</th><th>Item & Qty</th><th>Pickup Time</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>ID</th><th>Customer</th><th>Phone</th><th>Item & Qty</th><th>Address / Note</th><th>Pickup Time</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
                 {% for order in orders %}
@@ -176,6 +176,7 @@
                     <td>{{ order.name }}</td>
                     <td>📞 {{ order.phone }}</td>
                     <td>🎂 {{ order.item }} (Qty: {{ order.quantity }})</td>
+                    <td>📍 {{ order.location }}</td>
                     <td><b style="color: #d4af37;">⏰ {{ order.pickup_time }}</b></td>
                     <td><b style="color: #00ffcc;">{{ order.status }}</b></td>
                     <td>
@@ -186,7 +187,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7" style="text-align: center; color: #aaa; padding: 20px;">No orders found.</td></tr>
+                <tr><td colspan="8" style="text-align: center; color: #aaa; padding: 20px;">No orders found.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
